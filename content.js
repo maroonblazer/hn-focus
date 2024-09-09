@@ -20,9 +20,13 @@ function isCommentsPage() {
   return window.location.pathname.includes('item');
 }
 
+function isFavoritesPage() {
+  return window.location.pathname.includes('favorites');
+}
+
 function addCheckboxes() {
-  if (isCommentsPage()) {
-    return; // Don't add checkboxes on comments pages
+  if (isCommentsPage() || isFavoritesPage()) {
+    return; // Don't add checkboxes on comments or favorites pages
   }
 
   const articles = document.querySelectorAll('tr.athing');
