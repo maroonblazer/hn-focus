@@ -48,3 +48,48 @@
   border-color: #ff6600;
   box-shadow: 0 1px 3px rgba(255, 102, 0, 0.3);
 }
+
+#hn-selector-onboarding {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.onboarding-content {
+  background-color: #f6f6ef;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 500px;
+  text-align: left;
+}
+
+.onboarding-content h2 {
+  color: #ff6600;
+  margin-top: 0;
+}
+
+.onboarding-content ul {
+  padding-left: 20px;
+}
+
+.onboarding-content button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.onboarding-content button:hover {
+  background-color: #e65c00;
+}

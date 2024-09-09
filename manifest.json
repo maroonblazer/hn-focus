@@ -8,7 +8,7 @@
   "content_scripts": [
     {
       "matches": ["https://news.ycombinator.com/*"],
-      "js": ["content.js"],
+      "js": ["content.js", "onboarding.js"],
       "css": ["styles.css"]
     }
   ],
