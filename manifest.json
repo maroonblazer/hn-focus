@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "HN Article Selector",
+  "version": "1.0",
+  "description": "Select and filter Hacker News articles",
+  "permissions": ["storage"],
+  "host_permissions": ["https://news.ycombinator.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://news.ycombinator.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
