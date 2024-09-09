@@ -1,6 +1,6 @@
-# HN Article Selector
+# HN Focus
 
-A Chrome extension for selecting and filtering Hacker News articles.
+A Chrome extension for focusing on selected Hacker News articles.
 
 ## Features
 - Select up to a customizable number of articles

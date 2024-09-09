@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "HN Article Selector",
+  "name": "HN Focus",
   "version": "1.0",
   "description": "Select and filter Hacker News articles",
   "permissions": ["storage"],
