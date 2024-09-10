@@ -59,7 +59,16 @@ function handleCheckboxChange(event) {
     }
   } else {
     selectedCount--;
+    if (isPageFiltered() && selectedCount < maxSelected) {
+      restoreArticles();
+    }
   }
+  saveState(); // Add this line
+}
+
+function isPageFiltered() {
+  // Check if the page is filtered by checking if any article is hidden
+  return document.querySelectorAll('tr.athing[style*="display: none"]').length > 0;
 }
 
 function filterArticles() {
@@ -86,10 +95,6 @@ function restoreArticles() {
     article.style.display = '';
     article.nextElementSibling.style.display = '';
     article.nextElementSibling.nextElementSibling.style.display = '';
-    const checkbox = article.querySelector('.hn-selector');
-    if (checkbox) {
-      checkbox.checked = false;
-    }
   });
 
   // Restore the "More" link
@@ -98,7 +103,7 @@ function restoreArticles() {
     moreLink.style.display = '';
   }
 
-  selectedCount = 0;
+  selectedCount = document.querySelectorAll('.hn-selector:checked').length;
 }
 
 function saveState() {
@@ -132,7 +137,7 @@ function initialize() {
   loadMaxSelected().then(() => {
     if (!isCommentsPage()) {
       addCheckboxes();
-      loadState();
+      loadState(); // Add this line
     }
   });
 }
