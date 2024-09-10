@@ -5,8 +5,8 @@ let maxSelected = 3; // Default value
 function loadMaxSelected() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['maxArticles'], (result) => {
-      maxSelected = result.maxArticles || 3;
-      resolve(maxSelected);
+      maxSelected = result.maxArticles !== undefined ? result.maxArticles : 3; // Use 3 as default
+      resolve();
     });
   });
 }
@@ -113,21 +113,40 @@ function saveState() {
     ),
     filtered: selectedCount === maxSelected,
   };
-  chrome.storage.local.set({ hnState: state });
+  chrome.storage.local.set({ hnState: state }, () => {
+    if (chrome.runtime.lastError) {
+      if (chrome.runtime.lastError.message.includes('QUOTA_BYTES')) {
+        console.error('Storage quota exceeded');
+        // Optionally, try to free up space or notify the user
+      } else {
+        console.error('Error saving state:', chrome.runtime.lastError);
+      }
+    }
+  });
 }
 
 function loadState() {
   chrome.storage.local.get(['hnState'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('Error loading state:', chrome.runtime.lastError);
+      return; // Exit the function if there's an error
+    }
+    
     if (result.hnState && result.hnState.filtered) {
-      const articles = document.querySelectorAll('tr.athing');
-      articles.forEach((article) => {
-        const checkbox = article.querySelector('.hn-selector');
-        if (checkbox) {
-          checkbox.checked = result.hnState.selectedArticles.includes(article.id);
-        }
-      });
-      filterArticles();
-      selectedCount = maxSelected;
+      try {
+        const articles = document.querySelectorAll('tr.athing');
+        articles.forEach((article) => {
+          const checkbox = article.querySelector('.hn-selector');
+          if (checkbox) {
+            checkbox.checked = result.hnState.selectedArticles.includes(article.id);
+          }
+        });
+        filterArticles();
+        selectedCount = maxSelected;
+      } catch (error) {
+        console.error('Error restoring state:', error);
+        // Optionally, reset the state or notify the user
+      }
     }
   });
 }
@@ -137,7 +156,7 @@ function initialize() {
   loadMaxSelected().then(() => {
     if (!isCommentsPage()) {
       addCheckboxes();
-      loadState(); // Add this line
+      loadState();
     }
   });
 }
@@ -170,3 +189,30 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
   }
 });
+
+function notifyUser(message) {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  notification.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff6600; color: white; text-align: center; padding: 10px;';
+  document.body.prepend(notification);
+  setTimeout(() => notification.remove(), 5000); // Remove after 5 seconds
+}
+
+// Use it in error handling:
+if (chrome.runtime.lastError) {
+  console.error('Error:', chrome.runtime.lastError);
+  notifyUser('HN Focus encountered an error. Some features may be unavailable.');
+}
+
+// Add this message listener
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'runHNFocusTest') {
+    document.dispatchEvent(new CustomEvent('HNFocusTest', { 
+      detail: { function: request.functionName } 
+    }));
+    sendResponse({status: 'Test function triggered'});
+  }
+});
+
+console.log('HN Focus test functions loaded. Use the extension popup to run tests.');
+

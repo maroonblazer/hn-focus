@@ -3,12 +3,15 @@
   "name": "HN Focus",
   "version": "1.0",
   "description": "Select and filter Hacker News articles",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
   "host_permissions": ["https://news.ycombinator.com/*"],
   "content_scripts": [
     {
       "matches": ["https://news.ycombinator.com/*"],
-      "js": ["content.js", "onboarding.js"],
+      "js": ["content.js", "onboarding.js", "failure-testing.js"],
       "css": ["styles.css"]
     }
   ],
@@ -24,5 +27,11 @@
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["failure-testing.js"],
+      "matches": ["https://news.ycombinator.com/*"]
+    }
+  ]
 }
