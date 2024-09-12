@@ -3,10 +3,15 @@ let maxSelected = 3; // Default value
 
 // Function to load the maxSelected value
 function loadMaxSelected() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.sync.get(['maxArticles'], (result) => {
-      maxSelected = result.maxArticles || 3;
-      resolve(maxSelected);
+      if (chrome.runtime.lastError) {
+        console.error('Error loading maxArticles:', chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+      } else {
+        maxSelected = result.maxArticles !== undefined ? result.maxArticles : 3;
+        resolve(maxSelected);
+      }
     });
   });
 }
@@ -113,21 +118,35 @@ function saveState() {
     ),
     filtered: selectedCount === maxSelected,
   };
-  chrome.storage.local.set({ hnState: state });
+  chrome.storage.local.set({ hnState: state }, () => {
+    if (chrome.runtime.lastError) {
+      console.error('Error saving state:', chrome.runtime.lastError);
+      // Optionally, notify the user
+    }
+  });
 }
 
 function loadState() {
   chrome.storage.local.get(['hnState'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('Error loading state:', chrome.runtime.lastError);
+      return;
+    }
     if (result.hnState && result.hnState.filtered) {
-      const articles = document.querySelectorAll('tr.athing');
-      articles.forEach((article) => {
-        const checkbox = article.querySelector('.hn-selector');
-        if (checkbox) {
-          checkbox.checked = result.hnState.selectedArticles.includes(article.id);
-        }
-      });
-      filterArticles();
-      selectedCount = maxSelected;
+      try {
+        const articles = document.querySelectorAll('tr.athing');
+        articles.forEach((article) => {
+          const checkbox = article.querySelector('.hn-selector');
+          if (checkbox) {
+            checkbox.checked = result.hnState.selectedArticles.includes(article.id);
+          }
+        });
+        filterArticles();
+        selectedCount = maxSelected;
+      } catch (error) {
+        console.error('Error restoring state:', error);
+        // Optionally, reset the state or notify the user
+      }
     }
   });
 }
@@ -137,7 +156,13 @@ function initialize() {
   loadMaxSelected().then(() => {
     if (!isCommentsPage()) {
       addCheckboxes();
-      loadState(); // Add this line
+      loadState();
+    }
+  }).catch(error => {
+    console.error('Error initializing:', error);
+    // Fall back to default functionality
+    if (!isCommentsPage()) {
+      addCheckboxes();
     }
   });
 }
@@ -164,9 +189,56 @@ observer.observe(document.body, { childList: true, subtree: true });
 // Add a listener for changes to the maxArticles setting
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.maxArticles) {
-    maxSelected = changes.maxArticles.newValue;
-    if (selectedCount > maxSelected) {
+    const oldValue = changes.maxArticles.oldValue;
+    const newValue = changes.maxArticles.newValue;
+    maxSelected = newValue;
+
+    // Add these console.log messages here
+    console.log('Max articles changed:', oldValue, '->', newValue);
+    console.log('Current selected count:', selectedCount);
+    console.log('Page filtered:', isPageFiltered());
+
+    // Rest of the listener function...
+    if (newValue < oldValue) {
+      // Always adjust selections when max is decreased, even if page is filtered
+      const checkboxes = Array.from(document.querySelectorAll('.hn-selector:checked'));
+      let deselectedCount = 0;
+      checkboxes.forEach((checkbox, index) => {
+        if (index >= newValue) {
+          checkbox.checked = false;
+          deselectedCount++;
+        }
+      });
+      
+      selectedCount = newValue;
+      
+      // Apply filtering after adjusting selections
+      filterArticles();
+      
+      if (deselectedCount > 0) {
+        notifyUser(`Max articles reduced to ${newValue}. ${deselectedCount} selection(s) have been cleared and the page has been filtered.`);
+      }
+      // No notification if no articles were deselected
+    } else if (newValue > oldValue && isPageFiltered()) {
+      // Restore all articles only when max is increased and the page is currently filtered
       restoreArticles();
+      
+      notifyUser(`Max articles increased to ${newValue}. All articles have been restored. You can now select more articles.`);
     }
+    // No notification if max is increased but page isn't filtered
   }
 });
+
+function notifyUser(message) {
+  const notification = document.createElement('div');
+  notification.textContent = message;
+  notification.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff6600; color: white; text-align: center; padding: 10px; z-index: 9999;';
+  document.body.prepend(notification);
+  setTimeout(() => notification.remove(), 5000); // Remove after 5 seconds
+}
+
+// Add error notification
+if (chrome.runtime.lastError) {
+  console.error('Error:', chrome.runtime.lastError);
+  notifyUser('HN Focus encountered an error. Some features may be unavailable.');
+}
