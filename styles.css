@@ -93,3 +93,8 @@
 .onboarding-content button:hover {
   background-color: #e65c00;
 }
+
+.hn-focus-notification {
+  font-family: Verdana, Geneva, sans-serif;
+  line-height: 1.3;
+}

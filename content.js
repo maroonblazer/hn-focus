@@ -230,11 +230,41 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 function notifyUser(message) {
+  // Remove any existing notifications
+  const existingNotification = document.querySelector('.hn-focus-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
   const notification = document.createElement('div');
   notification.textContent = message;
-  notification.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff6600; color: white; text-align: center; padding: 10px; z-index: 9999;';
-  document.body.prepend(notification);
-  setTimeout(() => notification.remove(), 5000); // Remove after 5 seconds
+  notification.className = 'hn-focus-notification';
+  
+  // Apply styles to the notification
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff6600;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    max-width: 300px;
+    text-align: center;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: opacity 0.3s ease-in-out;
+  `;
+
+  document.body.appendChild(notification);
+
+  // Fade out and remove the notification after 5 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
 }
 
 // Add error notification
