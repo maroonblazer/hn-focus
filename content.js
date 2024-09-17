@@ -1,3 +1,10 @@
+const HN_FOCUS_ICON = `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"></circle>
+  <line x1="12" y1="16" x2="12" y2="12"></line>
+  <line x1="12" y1="8" x2="12" y2="8"></line>
+</svg>`;
+
 let selectedCount = 0;
 let maxSelected = 3; // Default value
 
@@ -189,7 +196,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 // Add a listener for changes to the maxArticles setting
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.maxArticles) {
-    const oldValue = changes.maxArticles.oldValue;
+    const oldValue = changes.maxArticles.oldValue ?? 3; // Default to 3 if undefined
     const newValue = changes.maxArticles.newValue;
     maxSelected = newValue;
 
@@ -216,11 +223,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       filterArticles();
       
       if (deselectedCount > 0) {
-        notifyUser(`Max articles reduced to ${newValue}. ${deselectedCount} selection(s) have been cleared and the page has been filtered.`);
+        notifyUser(`Max articles reduced to ${newValue}.<br>
+        ${deselectedCount} selection(s) have been cleared and the page has been filtered.`);
       }
       // No notification if no articles were deselected
     } else if (newValue > oldValue && isPageFiltered()) {
-      // Restore all articles only when max is increased and the page is currently filtered
+      // Restore all articles when max is increased and the page is currently filtered
       restoreArticles();
       
       notifyUser(`Max articles increased to ${newValue}. All articles have been restored. You can now select more articles.`);
@@ -237,8 +245,24 @@ function notifyUser(message) {
   }
 
   const notification = document.createElement('div');
-  notification.textContent = message;
   notification.className = 'hn-focus-notification';
+  
+  // Create icon element
+  const iconElement = document.createElement('span');
+  iconElement.innerHTML = HN_FOCUS_ICON;
+  iconElement.style.marginRight = '10px';
+  iconElement.style.display = 'inline-block';
+  iconElement.style.verticalAlign = 'middle';
+
+  // Create text element
+  const textElement = document.createElement('span');
+  textElement.innerHTML = message; // Changed from textContent to innerHTML
+  textElement.style.display = 'inline-block';
+  textElement.style.verticalAlign = 'middle';
+
+  // Append icon and text to notification
+  notification.appendChild(iconElement);
+  notification.appendChild(textElement);
   
   // Apply styles to the notification
   notification.style.cssText = `
@@ -252,10 +276,12 @@ function notifyUser(message) {
     border-radius: 5px;
     font-size: 14px;
     max-width: 300px;
-    text-align: center;
+    text-align: left;
     z-index: 9999;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: opacity 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
   `;
 
   document.body.appendChild(notification);
