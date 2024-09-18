@@ -298,3 +298,23 @@ if (chrome.runtime.lastError) {
   console.error('Error:', chrome.runtime.lastError);
   notifyUser('HN Focus encountered an error. Some features may be unavailable.');
 }
+
+// Add this to your existing message listener or create a new one if it doesn't exist
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === "resetExtension") {
+    // Uncheck all checked articles
+    document.querySelectorAll('.hn-selector:checked').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    
+    // Reset selectedCount
+    selectedCount = 0;
+    
+    // Restore all articles if the page was filtered
+    if (isPageFiltered()) {
+      restoreArticles();
+    }
+    
+    sendResponse({success: true});
+  }
+});
